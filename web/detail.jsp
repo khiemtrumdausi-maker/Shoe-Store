@@ -11,7 +11,7 @@
         /* CSS Tổng thể */
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8f9fa; margin: 0; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* Nút quay lại thông minh */
+        /* Nút quay lại */
         .back-btn-box { width: 85%; margin: 25px auto 0; }
         .btn-back { 
             display: inline-flex; align-items: center; gap: 8px; 
@@ -28,19 +28,30 @@
         .img-box img { width: 100%; max-width: 500px; border-radius: 12px; object-fit: cover; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         
         .info-box { flex: 1; display: flex; flex-direction: column; }
-        .product-title { font-size: 32px; font-weight: 800; margin: 0 0 15px 0; color: #0f172a; }
+        .product-title { font-size: 32px; font-weight: 800; margin: 0 0 10px 0; color: #0f172a; }
         
+        /* Nhãn giới tính */
+        .product-tags { margin-bottom: 20px; display: flex; gap: 10px; }
+        .tag-gender { 
+            background: #f8fafc; color: #334155; padding: 6px 14px; 
+            border-radius: 6px; font-size: 14px; font-weight: 700; 
+            display: inline-flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0;
+        }
+
         .price-box { margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; }
         .price { color: #e63946; font-size: 30px; font-weight: 800; }
         .old-price { text-decoration: line-through; color: #adb5bd; font-size: 18px; margin-left: 12px; }
         
         .desc { font-size: 15px; color: #64748b; line-height: 1.7; margin-bottom: 30px; }
         
-        /* Chọn Size (Radio Button Custom) */
+        /* Chọn Size */
         .size-container { margin-bottom: 30px; }
         .size-title { font-weight: 700; margin-bottom: 15px; display: block; font-size: 16px; color: #334155; }
-        .size-options { display: flex; flex-wrap: wrap; gap: 12px; }
-        .size-options input[type="radio"] { display: none; }
+        .size-options { display: flex; flex-wrap: wrap; gap: 12px; position: relative; }
+        
+        /* ĐÃ SỬA CSS TẠI ĐÂY: Để HTML5 có thể hiển thị cảnh báo "Vui lòng chọn mục này" */
+        .size-options input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+        
         .size-options label { 
             padding: 12px 22px; border: 2px solid #e2e8f0; border-radius: 8px; 
             cursor: pointer; text-align: center; background: #fff; 
@@ -53,8 +64,6 @@
         /* Mẹo chọn size */
         .size-guide { background: #eff6ff; padding: 18px; border-radius: 10px; font-size: 13.5px; color: #1e40af; margin-bottom: 30px; line-height: 1.6; border-left: 5px solid #3b82f6; }
         .size-guide i { color: #3b82f6; margin-right: 8px; }
-
-        .stock-info { font-size: 13px; color: #10b981; margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
 
         /* Action box */
         .action-box { display: flex; gap: 20px; align-items: flex-end; margin-top: auto; }
@@ -69,6 +78,9 @@
             display: flex; justify-content: center; align-items: center; gap: 10px; 
         }
         .btn-add:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+
+        /* Chỗ hiển thị lỗi từ Servlet trả về */
+        .error-msg { color: #dc2626; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
         @media (max-width: 900px) {
             .container { flex-direction: column; padding: 25px; width: 90%; }
@@ -94,6 +106,17 @@
         <div class="info-box">
             <h1 class="product-title">${detail.name}</h1>
             
+            <div class="product-tags">
+                <span class="tag-gender">
+                    <c:choose>
+                        <c:when test="${detail.genderID == 1}"><i class="fas fa-mars" style="color: #3b82f6;"></i> Giày Nam</c:when>
+                        <c:when test="${detail.genderID == 2}"><i class="fas fa-venus" style="color: #ec4899;"></i> Giày Nữ</c:when>
+                        <c:when test="${detail.genderID == 3}"><i class="fas fa-venus-mars" style="color: #8b5cf6;"></i> Unisex</c:when>
+                        <c:otherwise><i class="fas fa-shoe-prints"></i> Chưa phân loại</c:otherwise>
+                    </c:choose>
+                </span>
+            </div>
+            
             <div class="price-box">
                 <c:choose>
                     <c:when test="${detail.discountPrice > 0}">
@@ -110,9 +133,12 @@
             
             <div class="size-guide">
                 <strong><i class="fas fa-ruler-horizontal"></i> Mẹo chọn kích cỡ:</strong><br>
-                Bảng size VN/EU dựa trên chiều dài bàn chân: Nữ (35-40), Nam (39-45). <br>
-                <em>*Nên đo chân vào cuối ngày, cộng thêm 0.5 - 1cm để tạo độ thoải mái.</em>
+                Bảng size VN/EU dựa trên chiều dài bàn chân: Nữ (35-40), Nam (39-45).
             </div>
+
+            <c:if test="${not empty errorMsg}">
+                <div class="error-msg"><i class="fas fa-exclamation-circle"></i> ${errorMsg}</div>
+            </c:if>
             
             <form action="addToCart" method="post" style="display: flex; flex-direction: column; flex: 1;">
                 <input type="hidden" name="shoeId" value="${detail.id}">
@@ -134,7 +160,6 @@
                             </c:choose>
                         </c:forEach>
                     </div>
-                    <span class="stock-info"><i class="fas fa-check-circle"></i> Sản phẩm có sẵn tại kho</span>
                 </div>
                 
                 <div class="action-box">
