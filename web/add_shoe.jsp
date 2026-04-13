@@ -1,5 +1,14 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="dao.AdminDAO" %>
+<%@ page import="entity.Category" %>
+<%@ page import="java.util.List" %>
+<%
+    // Tự động gọi DAO lấy danh mục từ Database mỗi khi mở trang
+    AdminDAO dao = new AdminDAO();
+    List<Category> listC = dao.getAllCategory();
+    request.setAttribute("listCC", listC); 
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -133,16 +142,16 @@
                             <option value="2">Adidas</option>
                             <option value="3">Bitis</option>
                             <option value="4">Puma</option>
+                            <option value="5">Ngọc Linh</option> 
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Loại giày</label>
-                        <select name="categoryID">
-                            <option value="1">Chạy bộ</option>
-                            <option value="2">Sneaker</option>
-                            <option value="3">Bóng rổ</option>
-                            <option value="4">Lười / Slip-on</option>
+                        <select name="categoryID" required>
+                            <c:forEach items="${listCC}" var="c">
+                                <option value="${c.id}">${c.name}</option>
+                            </c:forEach>
                         </select>
                     </div>
                 </div>

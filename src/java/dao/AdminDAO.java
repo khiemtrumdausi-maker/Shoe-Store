@@ -3,7 +3,8 @@ package dao;
 import context.DBContext;
 import entity.Shoe;
 import entity.ShoeVariant;
-import entity.User; // Đã import class User của sếp
+import entity.User; 
+import entity.Category; // ĐÃ THÊM: Import class Category
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -174,5 +175,24 @@ public class AdminDAO {
             ps.setString(2, uid);
             ps.executeUpdate();
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    // ==========================================
+    // ĐÃ THÊM: HÀM LẤY DANH SÁCH LOẠI GIÀY (CATEGORY)
+    // ==========================================
+    public List<Category> getAllCategory() {
+        List<Category> list = new ArrayList<>();
+        String query = "SELECT * FROM categories";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new Category(rs.getInt("CategoryID"), rs.getString("CategoryName")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }
