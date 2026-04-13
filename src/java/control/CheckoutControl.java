@@ -16,7 +16,6 @@ import javax.servlet.http.HttpSession;
 @WebServlet(name = "CheckoutControl", urlPatterns = {"/checkout"})
 public class CheckoutControl extends HttpServlet {
 
-    // Chạy khi người dùng từ giỏ hàng sang trang thanh toán (Hiển thị trang)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -47,7 +46,6 @@ public class CheckoutControl extends HttpServlet {
         request.getRequestDispatcher("checkout.jsp").forward(request, response);
     }
 
-    // Chạy khi người dùng bấm nút "XÁC NHẬN ĐẶT HÀNG" (Xử lý lưu DB)
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,7 +55,11 @@ public class CheckoutControl extends HttpServlet {
         HttpSession session = request.getSession();
         User u = (User) session.getAttribute("acc");
         
-        // Lấy dữ liệu từ Form (Đảm bảo tên name trong jsp phải khớp)
+        if (u == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+        
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
         String paymentMethod = request.getParameter("paymentMethod"); 
@@ -65,24 +67,35 @@ public class CheckoutControl extends HttpServlet {
         CartDAO cartDao = new CartDAO();
         List<CartItem> listC = cartDao.getCartByUserID(u.getUserID());
         
+        // ====================================================================
+        // ĐÃ SỬA LỖI ĐỎ: Dùng đúng getVariantId() và getShoeName() của sếp
+        // ====================================================================
+        for (CartItem item : listC) {
+            int stock = cartDao.getStock(item.getVariantId()); 
+            
+            if (item.getQuantity() > stock) {
+                String errorMsg = "Rất tiếc! Sản phẩm '" + item.getShoeName() + "' (Size " + item.getSize() + ") hiện chỉ còn " + stock + " đôi do vừa có khách hàng khác thanh toán trước. Vui lòng quay lại giỏ hàng để điều chỉnh!";
+                request.setAttribute("mess", errorMsg);
+                
+                doGet(request, response);
+                return; 
+            }
+        }
+        // ====================================================================
+
         double totalMoney = 0;
         for (CartItem item : listC) {
             totalMoney += (item.getPrice() * item.getQuantity());
         }
         
         OrderDAO orderDao = new OrderDAO();
-        // Gọi hàm placeOrder để lưu vào DB và xóa giỏ hàng trong DB luôn
         boolean success = orderDao.placeOrder(u.getUserID(), totalMoney, phone, address, paymentMethod, listC);
         
         if (success) {
-            // Đặt hàng thành công:
-            session.setAttribute("cartSize", 0); // Reset icon giỏ hàng trên header
-            
-            // Thay vì đá về home, mình gửi thông báo sang trang thành công
+            session.setAttribute("cartSize", 0); 
             request.setAttribute("msg", "Đơn hàng của bạn đã được tiếp nhận!");
             request.getRequestDispatcher("order_success.jsp").forward(request, response);
         } else {
-            // Thất bại: Trả về trang checkout và hiện lỗi
             request.setAttribute("mess", "Đặt hàng thất bại. Hệ thống đang bận!");
             doGet(request, response);
         }
