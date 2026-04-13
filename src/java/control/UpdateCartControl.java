@@ -21,19 +21,17 @@ public class UpdateCartControl extends HttpServlet {
         
         if (action != null) {
             if (action.equals("del")) {
-                // Xóa luôn
+                // Xóa sản phẩm khỏi giỏ
                 dao.deleteCartItem(cartId);
             } 
             else if (action.equals("up")) {
-                // Tăng 1
-                int currentQty = dao.getQuantityByCartID(cartId);
-                dao.updateCartQuantity(cartId, currentQty + 1);
+                // LOGIC CHẶN ÂM KHO: Gọi hàm Safe, nếu số lượng giỏ >= kho thì MySQL tự động chặn, không cho tăng
+                dao.increaseQuantitySafe(cartId);
             } 
             else if (action.equals("down")) {
-                // Giảm 1
+                // Giảm 1, nếu về 0 thì xóa
                 int currentQty = dao.getQuantityByCartID(cartId);
                 if (currentQty <= 1) {
-                    // Nếu đang là 1 mà giảm tiếp thì xóa luôn
                     dao.deleteCartItem(cartId);
                 } else {
                     dao.updateCartQuantity(cartId, currentQty - 1);
@@ -41,20 +39,12 @@ public class UpdateCartControl extends HttpServlet {
             }
         }
         
-        // Sau khi update xong, điều hướng ngược lại trang giỏ hàng.
-        // Servlet CartControl sẽ tự động chạy lại để tính tiền và cập nhật số chấm đỏ trên icon.
+        // Quay lại trang giỏ hàng
         response.sendRedirect("cart");
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { processRequest(request, response); }
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { processRequest(request, response); }
 }
