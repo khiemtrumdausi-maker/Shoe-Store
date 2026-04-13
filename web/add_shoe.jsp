@@ -90,7 +90,7 @@
         </h2>
         
         <div class="form-container">
-            <form action="addControl" method="post">
+            <form action="add" method="post" enctype="multipart/form-data">
                 
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
@@ -99,8 +99,8 @@
                     </div>
                     
                     <div class="form-group" style="flex: 1;">
-                        <label>Tên file Ảnh (URL/Link)</label>
-                        <input type="text" name="image" placeholder="VD: adidas_stan.jpg" required>
+                        <label>Ảnh sản phẩm (Upload từ máy tính)</label>
+                        <input type="file" name="image" accept="image/*" required style="padding: 9px 15px;">
                     </div>
                 </div>
                 

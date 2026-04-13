@@ -80,17 +80,19 @@
         </h2>
         
         <div class="form-container">
-            <form action="edit" method="post">
+            <form action="edit" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="${detail.id}">
+                <input type="hidden" name="oldImage" value="${detail.image}">
                 
                 <div class="form-group">
                     <label>Tên giày</label>
                     <input type="text" name="name" value="${detail.name}" placeholder="Nhập tên sản phẩm..." required>
                 </div>
-                
+                 
                 <div class="form-group">
-                    <label>Tên file Ảnh (URL/Link)</label>
-                    <input type="text" name="image" value="${detail.image}" placeholder="Nhập link ảnh..." required>
+                    <label>Ảnh sản phẩm (Để trống nếu không muốn đổi ảnh mới)</label>
+                    <input type="file" name="image" accept="image/*" style="padding: 9px 15px;">
+                    <small style="color: #64748b; margin-top: 5px;">Ảnh hiện tại trong hệ thống: <b>${detail.image}</b></small>
                 </div>
                 
                 <div class="form-row">

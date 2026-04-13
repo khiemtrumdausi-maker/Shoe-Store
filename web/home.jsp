@@ -75,7 +75,7 @@
     <div class="slider-container">
         <div class="slider-wrapper">
             <div class="slide">
-                <img src="images/banner1.jpg" alt="Banner 1">
+                <img src="${pageContext.request.contextPath}/images/banner.jpg" alt="Summer Sale">
                 <div class="slide-content">
                     <h2>New Arrival</h2>
                     <p>Khám phá bộ sưu tập giày thể thao mới nhất. Phong cách năng động, trải nghiệm êm ái.</p>
@@ -83,7 +83,7 @@
                 </div>
             </div>
             <div class="slide">
-                <img src="images/banner2.jpg" alt="Banner 2">
+                <img src="${pageContext.request.contextPath}/images/banner_moi_2.jpg" alt="Banner 2">
                 <div class="slide-content">
                     <h2>Summer Sale</h2>
                     <p>Ưu đãi cực sốc lên tới 50% cho các dòng giày chạy bộ hot nhất. Đừng bỏ lỡ!</p>
@@ -125,7 +125,7 @@
             <c:forEach items="${listS}" var="o">
                 <div class="product-card">
                     <div>
-                        <img src="${o.image}" 
+                        <img src="${pageContext.request.contextPath}/images/${o.image.replace('images/', '')}" 
                              alt="${o.name}" 
                              onerror="this.onerror=null; this.src='https://placehold.co/300x300/f1f5f9/94a3b8?text=Luma+Store'">
                         
