@@ -1,5 +1,7 @@
 package control;
 
+import dao.AdminDAO;
+import entity.DashboardDTO;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,7 +16,16 @@ public class DashboardControl extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         
+        // 1. Gọi DAO
+        AdminDAO dao = new AdminDAO();
         
+        // 2. Lấy số liệu thực tế từ Database
+        DashboardDTO stats = dao.getDashboardStats();
+        
+        // 3. Đẩy dữ liệu sang JSP với tên biến là "stats"
+        request.setAttribute("stats", stats);
+        
+        // 4. Mở trang giao diện
         request.getRequestDispatcher("admin_dashboard.jsp").forward(request, response);
     }
 

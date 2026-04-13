@@ -17,16 +17,20 @@ public class VariantControl extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         
-        // Lấy ID đôi giày
-        String shoeID = request.getParameter("sid");
+        // 1. Lấy ID đôi giày từ URL (Hỗ trợ cả tham số sid hoặc id)
+        String sid = request.getParameter("sid");
+        if(sid == null) sid = request.getParameter("id");
         
-        // Lấy danh sách size của đôi giày đó
+        // 2. Gọi DAO lấy danh sách size từ Database
         AdminDAO dao = new AdminDAO();
-        List<ShoeVariant> listV = dao.getVariantsByShoeID(shoeID);
+        List<ShoeVariant> listV = dao.getVariantsByShoeID(sid);
         
-        // Đẩy dữ liệu sang trang JSP (gửi kèm cả shoeID để tí nữa làm form thêm size)
+        // 3. Đẩy danh sách vào biến mang tên "listV"
         request.setAttribute("listV", listV);
-        request.setAttribute("shoeID", shoeID);
+        // Gửi thêm sid để tí nữa dùng cho Form thêm mới
+        request.setAttribute("currentSid", sid);
+        
+        // 4. Mở trang JSP lên
         request.getRequestDispatcher("admin_variants.jsp").forward(request, response);
     }
 

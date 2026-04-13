@@ -5,7 +5,7 @@ import entity.Shoe;
 import entity.ShoeVariant;
 import entity.User; 
 import entity.Category;
-import entity.Brand; // ĐÃ THÊM IMPORT BRAND
+import entity.Brand;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -94,14 +94,39 @@ public class AdminDAO {
         return list;
     }
 
+    // =========================================================================
+    // ĐÃ SỬA: Hàm thêm hoặc CẬP NHẬT CỘNG DỒN Size mới vào kho (Chống lặp size)
+    // =========================================================================
     public void insertVariant(String shoeID, String size, String stock) {
-        String query = "INSERT INTO ShoeVariants (ShoeID, Size, StockQuantity) VALUES (?, ?, ?)";
+        String checkQuery = "SELECT * FROM ShoeVariants WHERE ShoeID = ? AND Size = ?";
+        
         try {
             conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setString(1, shoeID); ps.setString(2, size); ps.setString(3, stock);
-            ps.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+            ps = conn.prepareStatement(checkQuery);
+            ps.setString(1, shoeID);
+            ps.setString(2, size);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                // Đã tồn tại -> Thực hiện CỘNG DỒN số lượng
+                String updateQuery = "UPDATE ShoeVariants SET StockQuantity = StockQuantity + ? WHERE ShoeID = ? AND Size = ?";
+                PreparedStatement psUpdate = conn.prepareStatement(updateQuery);
+                psUpdate.setInt(1, Integer.parseInt(stock)); 
+                psUpdate.setString(2, shoeID);
+                psUpdate.setString(3, size);
+                psUpdate.executeUpdate();
+            } else {
+                // Chưa tồn tại -> Thêm dòng mới tinh
+                String insertQuery = "INSERT INTO ShoeVariants (ShoeID, Size, StockQuantity) VALUES (?, ?, ?)";
+                PreparedStatement psInsert = conn.prepareStatement(insertQuery);
+                psInsert.setString(1, shoeID);
+                psInsert.setString(2, size);
+                psInsert.setString(3, stock);
+                psInsert.executeUpdate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public List<User> getAllUser() {
@@ -141,9 +166,6 @@ public class AdminDAO {
         return list;
     }
 
-    // ==========================================
-    // ĐÃ THÊM: HÀM LẤY DANH SÁCH THƯƠNG HIỆU (BRAND)
-    // ==========================================
     public List<Brand> getAllBrands() {
         List<Brand> list = new ArrayList<>();
         String query = "SELECT * FROM brands";
@@ -158,5 +180,31 @@ public class AdminDAO {
             e.printStackTrace();
         }
         return list;
+    }
+    
+    // ==========================================
+    // HÀM LẤY SỐ LIỆU TỔNG QUAN (DASHBOARD)
+    // ==========================================
+    public entity.DashboardDTO getDashboardStats() {
+        // Query lấy: Tổng doanh thu (chỉ tính đơn Hoàn thành), Tổng số đơn, Tổng số khách
+        String query = "SELECT "
+                + "(SELECT SUM(TotalAmount) FROM Orders WHERE Status = N'Hoàn thành') AS revenue, "
+                + "(SELECT COUNT(*) FROM Orders) AS orders, "
+                + "(SELECT COUNT(*) FROM Users WHERE Role = 'Customer') AS customers";
+        try {
+            conn = new context.DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                // Nếu doanh thu null (chưa có đơn hoàn thành) thì để là 0
+                double rev = rs.getDouble("revenue");
+                int ord = rs.getInt("orders");
+                int cust = rs.getInt("customers");
+                return new entity.DashboardDTO(rev, ord, cust);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new entity.DashboardDTO(0, 0, 0); // Trả về 0 nếu lỗi
     }
 }
