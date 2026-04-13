@@ -115,7 +115,8 @@
                             
                             <td>
                                 <c:if test="${o.status == 'Chờ xác nhận'}">
-                                    <a href="approveOrderControl?id=${o.orderID}" class="btn-approve">
+                                    <%-- FIX LỖI 404: Đã trỏ đúng về updateOrderStatus --%>
+                                    <a href="updateOrderStatus?oid=${o.orderID}&status=Đang giao" class="btn-approve">
                                         <i class="fas fa-check-circle"></i> Duyệt Đơn
                                     </a>
                                 </c:if>
