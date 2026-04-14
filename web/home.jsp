@@ -85,7 +85,7 @@
                 </div>
             </div>
             <div class="slide">
-                <img src="${pageContext.request.contextPath}/images/poster-giay-just-do-it.jpg" alt="Summer Sale">
+                <img src="${pageContext.request.contextPath}/images/ss.jpg" alt="Summer Sale">
                 <div class="slide-content">
                     <h2>Summer Sale</h2>
                     <p>Ưu đãi cực sốc lên tới 50% cho các dòng giày chạy bộ hot nhất. Đừng bỏ lỡ!</p>
