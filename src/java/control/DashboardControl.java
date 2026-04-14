@@ -1,6 +1,7 @@
 package control;
 
 import dao.AdminDAO;
+import dao.OrderDAO; // Bổ sung import OrderDAO của anh em mình
 import entity.DashboardDTO;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -16,16 +17,17 @@ public class DashboardControl extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         
-        // 1. Gọi DAO
+        // 1. Gọi DAO mặc định của Dashboard
         AdminDAO dao = new AdminDAO();
-        
-        // 2. Lấy số liệu thực tế từ Database
         DashboardDTO stats = dao.getDashboardStats();
-        
-        // 3. Đẩy dữ liệu sang JSP với tên biến là "stats"
         request.setAttribute("stats", stats);
         
-        // 4. Mở trang giao diện
+        // 2. GỌI THÊM OrderDAO ĐỂ LẤY SỐ ĐƠN HỦY (MỚI THÊM)
+        OrderDAO orderDao = new OrderDAO();
+        int canceledCount = orderDao.countCanceledOrders();
+        request.setAttribute("canceledCount", canceledCount); // Đẩy sang JSP với tên 'canceledCount'
+        
+        // 3. Mở trang giao diện
         request.getRequestDispatcher("admin_dashboard.jsp").forward(request, response);
     }
 

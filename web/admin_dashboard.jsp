@@ -78,9 +78,15 @@
                 <p>${stats.totalCustomers} Người</p>
             </div>
 
+            <%-- SỬA Ở ĐÂY: Đổi Hoàn Tiền thành Đơn Đã Hủy và gọi biến canceledCount --%>
             <div class="stat-box danger">
-                <h3>Hoàn Tiền</h3>
-                <p>0 Yêu cầu</p>
+                <h3>Đơn Đã Hủy</h3>
+                <p>
+                    <c:choose>
+                        <c:when test="${not empty canceledCount}">${canceledCount}</c:when>
+                        <c:otherwise>0</c:otherwise>
+                    </c:choose> Đơn
+                </p>
             </div>
         </div>
         
