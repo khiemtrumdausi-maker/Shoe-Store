@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "AddControl", urlPatterns = {"/add"})
+// ĐÃ XÓA @MultipartConfig VÌ KHÔNG CẦN UPLOAD FILE NỮA
 public class AddControl extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -16,7 +17,6 @@ public class AddControl extends HttpServlet {
         
         request.setCharacterEncoding("UTF-8");
         
-        // Lấy thông tin từ form
         String name = request.getParameter("name");
         String price = request.getParameter("price");
         String discount = request.getParameter("discountPrice"); 
@@ -25,13 +25,12 @@ public class AddControl extends HttpServlet {
         String brand = request.getParameter("brandID");
         String category = request.getParameter("categoryID");
         
-        // --- XỬ LÝ ẢNH KIỂU CHỌN CÓ SẴN ---
-        // Lấy cái tên file sếp nhập (vd: giay-nike.jpg)
+        // --- CHẾ ĐỘ CHỌN ẢNH CÓ SẴN ---
+        // Lấy tên ảnh sếp nhập vào ô input text (ví dụ: giay1.jpg)
         String fileName = request.getParameter("image");
-        // Ghép thêm tiền tố thư mục để lưu vào DB cho đúng: images/giay-nike.jpg
+        // Tự động ghép thêm tiền tố thư mục images/ để vào DB cho chuẩn
         String imagePath = "images/" + fileName;
         
-        // Gọi DAO lưu vào Database
         AdminDAO dao = new AdminDAO();
         dao.insertShoe(name, imagePath, price, discount, description, gender, brand, category);
         
