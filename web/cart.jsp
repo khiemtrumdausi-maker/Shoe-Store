@@ -8,11 +8,12 @@
     <title>Giỏ hàng của bạn - Luma Store</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS Gốc của Khiêm + Tinh chỉnh */
+        /* CSS Gốc của sếp */
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8f9fa; margin: 0; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* FIX QUAN TRỌNG: Form giờ đóng vai trò là container luôn */
         .cart-container { width: 85%; margin: 30px auto; display: flex; gap: 30px; flex: 1; }
         
-        /* Nút quay lại thông minh */
         .back-btn-box { width: 85%; margin: 20px auto 0; }
         .btn-back { 
             display: inline-flex; align-items: center; gap: 8px; 
@@ -48,11 +49,15 @@
         .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; }
         .total-row { font-size: 20px; font-weight: bold; color: #e63946; border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px; }
         
-        .btn-checkout { display: block; width: 100%; text-align: center; background: #28a745; color: white; padding: 15px 0; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; margin-top: 20px; transition: 0.3s; border: none; cursor: pointer; }
+        /* FIX QUAN TRỌNG: Reset style của button submit cho giống thẻ a cũ */
+        .btn-checkout { display: block; width: 100%; text-align: center; background: #28a745; color: white; padding: 15px 0; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; margin-top: 20px; transition: 0.3s; border: none; cursor: pointer; font-family: inherit;}
         .btn-checkout:hover { background: #218838; transform: translateY(-2px); }
         
         .empty-cart { text-align: center; padding: 60px 0; color: #94a3b8; }
         .empty-cart i { font-size: 70px; color: #e2e8f0; margin-bottom: 20px; }
+        
+        /* CSS cho Checkbox to và đẹp hơn */
+        .check-item { width: 18px; height: 18px; cursor: pointer; accent-color: #0056b3; }
     </style>
 </head>
 <body>
@@ -65,7 +70,8 @@
         </button>
     </div>
 
-    <div class="cart-container">
+    <form action="checkout" method="POST" class="cart-container">
+        
         <div class="cart-items">
             <h2 class="cart-title">Giỏ hàng của bạn</h2>
             
@@ -74,7 +80,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Sản phẩm</th>
+                                <th style="width: 40px; text-align: center;">Chọn</th> <th>Sản phẩm</th>
                                 <th>Đơn giá</th>
                                 <th>Số lượng</th>
                                 <th>Thành tiền</th>
@@ -84,6 +90,10 @@
                         <tbody>
                             <c:forEach items="${listCart}" var="c">
                                 <tr>
+                                    <td style="text-align: center;">
+                                        <input type="checkbox" name="selectedItems" value="${c.cartId}" class="check-item" checked>
+                                    </td>
+                                    
                                     <td>
                                         <div class="product-info">
                                             <img src="${pageContext.request.contextPath}/images/${c.image.replace('images/', '')}" alt="giày">
@@ -127,26 +137,25 @@
 
         <div class="cart-summary">
             <h3 class="summary-title">Tóm tắt đơn hàng</h3>
+            <p style="font-size: 13px; color: #666; margin-top: -10px; margin-bottom: 15px;">
+                (Tổng tiền sẽ được tính lại ở bước sau dựa trên các món bạn chọn)
+            </p>
+            
             <div class="summary-row">
-                <span>Tạm tính:</span>
+                <span>Tổng trong giỏ:</span>
                 <span><fmt:formatNumber value="${totalMoney}" pattern="#,###"/> đ</span>
             </div>
             <div class="summary-row">
                 <span>Phí vận chuyển:</span>
                 <span style="color: #28a745; font-weight: bold;">Miễn phí</span>
             </div>
-            <div class="summary-row total-row">
-                <span>Tổng cộng:</span>
-                <span><fmt:formatNumber value="${totalMoney}" pattern="#,###"/> đ</span>
-            </div>
             
             <c:if test="${not empty listCart}">
-                <a href="checkout" class="btn-checkout">TIẾN HÀNH THANH TOÁN</a>
+                <button type="submit" class="btn-checkout">TIẾN HÀNH THANH TOÁN</button>
             </c:if>
         </div>
-    </div>
-
-    <%@ include file="footer.jsp" %>
+        
+    </form> <%@ include file="footer.jsp" %>
 
 </body>
 </html>
