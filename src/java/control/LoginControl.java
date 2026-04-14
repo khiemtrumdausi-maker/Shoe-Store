@@ -3,6 +3,7 @@ package control;
 import dao.CartDAO;
 import dao.OrderDAO;
 import dao.UserDAO;
+import entity.Notification; // Đã thêm import để không bị lỗi đỏ
 import entity.User;
 import java.io.IOException;
 import java.util.List;
@@ -33,13 +34,22 @@ public class LoginControl extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("acc", u);
             
-            // --- PHẦN QUAN TRỌNG: LẤY DỮ LIỆU HEADER NGAY KHI ĐĂNG NHẬP THÀNH CÔNG ---
+            // --- NẠP DỮ LIỆU HEADER CHUẨN SHOPEE ---
             OrderDAO odao = new OrderDAO();
             CartDAO cdao = new CartDAO();
             
-            // 1. Lấy danh sách thông báo
-            List<String> listNoti = odao.getNotisByUserID(u.getUserID());
+            // 1. Lấy thông báo dạng Object (Gọi hàm getNotifications mới tạo ở OrderDAO)
+            List<Notification> listNoti = odao.getNotifications(u.getUserID());
             session.setAttribute("listNoti", listNoti);
+            
+            // CHỈ ĐẾM NHỮNG THÔNG BÁO CHƯA ĐỌC (IsRead = false)
+            int unreadCount = 0;
+            for (Notification n : listNoti) {
+                if (!n.isIsRead()) {
+                    unreadCount++;
+                }
+            }
+            session.setAttribute("notiSize", unreadCount); 
             
             // 2. Lấy số lượng giỏ hàng
             int cartSize = cdao.getCartSizeByUserID(u.getUserID());
