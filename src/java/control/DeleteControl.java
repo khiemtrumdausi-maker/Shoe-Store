@@ -8,20 +8,24 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "DeleteControl", urlPatterns = {"/delete"})
+// Đã sửa lại url cho khớp với link sếp bấm
+@WebServlet(name = "DeleteControl", urlPatterns = {"/deleteControl"}) 
 public class DeleteControl extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
         
-        // 1. Lấy ID (sid) của đôi giày từ trên đường link xuống
-        String id = request.getParameter("sid");
+        // 1. Lấy đúng tham số "id" từ link ?id=...
+        String id = request.getParameter("id"); 
         
         // 2. Gọi DAO để xóa
-        AdminDAO dao = new AdminDAO();
-        dao.deleteShoe(id);
+        if (id != null) {
+            AdminDAO dao = new AdminDAO();
+            dao.deleteShoe(id);
+        }
         
-        // 3. Xóa xong thì chuyển hướng quay lại trang quản lý (manager)
+        // 3. Xóa xong thì chuyển hướng quay lại trang quản lý
         response.sendRedirect("manager");
     }
 

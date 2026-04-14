@@ -3,7 +3,7 @@ package control;
 import dao.CartDAO;
 import dao.OrderDAO;
 import dao.UserDAO;
-import entity.Notification; // Đã thêm import để không bị lỗi đỏ
+import entity.Notification; 
 import entity.User;
 import java.io.IOException;
 import java.util.List;
@@ -31,6 +31,14 @@ public class LoginControl extends HttpServlet {
             request.setAttribute("mess", "Sai Email hoặc mật khẩu!");
             request.getRequestDispatcher("login.jsp").forward(request, response);
         } else {
+            // --- ĐOẠN KIỂM TRA KHÓA TÀI KHOẢN (STATUS = 0) ---
+            if (u.getStatus() == 0) {
+                request.setAttribute("mess", "Tài khoản của sếp đã bị khóa. Vui lòng liên hệ Admin!");
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return; // Dừng lại luôn, không cho chạy xuống đoạn tạo Session dưới đây
+            }
+            // -------------------------------------------------
+
             HttpSession session = request.getSession();
             session.setAttribute("acc", u);
             
@@ -38,15 +46,17 @@ public class LoginControl extends HttpServlet {
             OrderDAO odao = new OrderDAO();
             CartDAO cdao = new CartDAO();
             
-            // 1. Lấy thông báo dạng Object (Gọi hàm getNotifications mới tạo ở OrderDAO)
+            // 1. Lấy thông báo dạng Object
             List<Notification> listNoti = odao.getNotifications(u.getUserID());
             session.setAttribute("listNoti", listNoti);
             
-            // CHỈ ĐẾM NHỮNG THÔNG BÁO CHƯA ĐỌC (IsRead = false)
+            // Đếm những thông báo chưa đọc
             int unreadCount = 0;
-            for (Notification n : listNoti) {
-                if (!n.isIsRead()) {
-                    unreadCount++;
+            if (listNoti != null) {
+                for (Notification n : listNoti) {
+                    if (!n.isIsRead()) {
+                        unreadCount++;
+                    }
                 }
             }
             session.setAttribute("notiSize", unreadCount); 
@@ -54,7 +64,6 @@ public class LoginControl extends HttpServlet {
             // 2. Lấy số lượng giỏ hàng
             int cartSize = cdao.getCartSizeByUserID(u.getUserID());
             session.setAttribute("cartSize", cartSize);
-            // -----------------------------------------------------------------------
             
             // Phân quyền theo Role
             if ("Admin".equalsIgnoreCase(u.getRole())) {
