@@ -16,11 +16,13 @@ public class OrderDAO {
     PreparedStatement ps = null;
     ResultSet rs = null;
 
-    // --- 1. HÀM XÁC NHẬN ĐÃ NHẬN HÀNG (MỚI THÊM) ---
-    // Hàm này cập nhật: Status -> 'Đã giao' và PaymentStatus -> 'Đã thanh toán'
+    // --- 1. HÀM XÁC NHẬN ĐÃ NHẬN HÀNG (ĐÃ FIX LỖI ENUM) ---
+    // Cập nhật: Status -> 'Hoàn thành' và PaymentStatus -> 'Đã thanh toán'
     public void confirmReceived(String orderId) {
-        String queryOrder = "UPDATE Orders SET Status = 'Đã giao' WHERE OrderID = ?";
+        // SỬA Ở ĐÂY: Dùng đúng chữ 'Hoàn thành' có trong DB của sếp
+        String queryOrder = "UPDATE Orders SET Status = 'Hoàn thành' WHERE OrderID = ?";
         String queryPayment = "UPDATE Payments SET PaymentStatus = 'Đã thanh toán' WHERE OrderID = ?";
+        
         try {
             conn = new DBContext().getConnection();
             conn.setAutoCommit(false); // Chạy giao dịch (Transaction)
@@ -36,6 +38,7 @@ public class OrderDAO {
             psPayment.executeUpdate();
 
             conn.commit();
+            System.out.println(">>> Đã xác nhận thành công đơn hàng ID: " + orderId);
         } catch (Exception e) {
             try { if(conn != null) conn.rollback(); } catch (Exception ex) {}
             e.printStackTrace();
