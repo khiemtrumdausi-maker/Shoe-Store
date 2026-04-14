@@ -1,6 +1,6 @@
 package control;
 
-import dao.AdminDAO;
+import dao.OrderDAO;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -8,25 +8,20 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// Đã sửa lại url cho khớp với link sếp bấm
-@WebServlet(name = "DeleteControl", urlPatterns = {"/deleteControl"}) 
-public class DeleteControl extends HttpServlet {
+@WebServlet(name = "CancelOrderControl", urlPatterns = {"/cancelOrder"})
+public class CancelOrderControl extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        String orderId = request.getParameter("id");
         
-        // 1. Lấy đúng tham số "id" từ link ?id=...
-        String id = request.getParameter("id"); 
-        
-        // 2. Gọi DAO để xóa
-        if (id != null) {
-            AdminDAO dao = new AdminDAO();
-            dao.deleteShoe(id);
+        if (orderId != null) {
+            OrderDAO dao = new OrderDAO();
+            dao.cancelOrder(orderId); // Gọi hàm hủy đơn
         }
         
-        // 3. Xóa xong thì chuyển hướng quay lại trang quản lý
-        response.sendRedirect("manager");
+        // Trở về trang lịch sử
+        response.sendRedirect("my-orders");
     }
 
     @Override

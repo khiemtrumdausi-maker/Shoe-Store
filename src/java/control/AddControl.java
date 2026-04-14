@@ -14,36 +14,32 @@ public class AddControl extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Chỉnh encoding để nhận tiếng Việt có dấu từ Form không bị lỗi font
         request.setCharacterEncoding("UTF-8");
         
-        // 1. Lấy dữ liệu người dùng nhập từ các ô input (name="..." trong form)
+        // Lấy thông tin từ form
         String name = request.getParameter("name");
-        String image = request.getParameter("image");
         String price = request.getParameter("price");
-        String discount = request.getParameter("discount");
+        String discount = request.getParameter("discountPrice"); 
         String description = request.getParameter("description");
-        String gender = request.getParameter("gender");
-        String brand = request.getParameter("brand");
-        String category = request.getParameter("category");
+        String gender = request.getParameter("genderID");
+        String brand = request.getParameter("brandID");
+        String category = request.getParameter("categoryID");
         
-        // 2. Gọi DAO và truyền cục dữ liệu này vào để nó cất xuống DB
+        // --- XỬ LÝ ẢNH KIỂU CHỌN CÓ SẴN ---
+        // Lấy cái tên file sếp nhập (vd: giay-nike.jpg)
+        String fileName = request.getParameter("image");
+        // Ghép thêm tiền tố thư mục để lưu vào DB cho đúng: images/giay-nike.jpg
+        String imagePath = "images/" + fileName;
+        
+        // Gọi DAO lưu vào Database
         AdminDAO dao = new AdminDAO();
-        dao.insertShoe(name, image, price, discount, description, gender, brand, category);
+        dao.insertShoe(name, imagePath, price, discount, description, gender, brand, category);
         
-        // 3. Thêm xong thì tự động quay về trang danh sách để xem thành quả
         response.sendRedirect("manager");
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { processRequest(request, response); }
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { processRequest(request, response); }
 }

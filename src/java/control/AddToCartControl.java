@@ -18,7 +18,8 @@ public class AddToCartControl extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // 1. Kiểm tra đăng nhập
+        request.setCharacterEncoding("UTF-8");
+        
         HttpSession session = request.getSession();
         User u = (User) session.getAttribute("acc");
         
@@ -27,29 +28,41 @@ public class AddToCartControl extends HttpServlet {
             return;
         }
         
-        // 2. Lấy thông tin từ form
         int userId = u.getUserID();
         String variantIdRaw = request.getParameter("variantId");
         String quantityRaw = request.getParameter("quantity");
+        String shoeIdRaw = request.getParameter("shoeId"); 
         
         try {
             int variantId = Integer.parseInt(variantIdRaw);
             int quantity = Integer.parseInt(quantityRaw);
             
-            // 3. Thêm vào Database
             CartDAO dao = new CartDAO();
+            
+            // ========================================================
+            // LOGIC CHẶN ÂM KHO: Tính tổng và so sánh
+            // ========================================================
+            int stock = dao.getStock(variantId);
+            int currentCartQty = dao.getCartQuantity(userId, variantId);
+            
+            if (currentCartQty + quantity > stock) {
+                // Báo lỗi đỏ chót về trang chi tiết, chặn không cho thêm
+                request.setAttribute("errorMsg", "Size này chỉ còn " + stock + " đôi. Bạn đang có " + currentCartQty + " đôi trong giỏ rồi!");
+                request.getRequestDispatcher("detail?sid=" + shoeIdRaw).forward(request, response);
+                return;
+            }
+            
+            // Qua được bước trên nghĩa là đủ hàng -> Cho phép thêm
             dao.addToCart(userId, variantId, quantity);
             
-            // 4. Tính lại tổng số lượng giày trong giỏ để hiển thị lên cái chấm đỏ
+            // Cập nhật lại giỏ hàng trên Header
             List<CartItem> list = dao.getCartByUserID(userId);
             int totalQuantity = 0;
             for (CartItem item : list) {
                 totalQuantity += item.getQuantity();
             }
-            // Lưu con số này vào session
             session.setAttribute("cartSize", totalQuantity);
             
-            // 5. Chuyển thẳng sang trang giỏ hàng
             response.sendRedirect("cart");
             
         } catch (Exception e) {
@@ -59,14 +72,7 @@ public class AddToCartControl extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { processRequest(request, response); }
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { processRequest(request, response); }
 }
