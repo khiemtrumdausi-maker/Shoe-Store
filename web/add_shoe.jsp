@@ -5,7 +5,7 @@
 <%@ page import="entity.Brand" %>
 <%@ page import="java.util.List" %>
 <%
-    // Tự động gọi DAO lấy Category và Brand từ Database
+    // Tự động gọi DAO lấy Category và Brand từ Database cho sếp chọn
     AdminDAO dao = new AdminDAO();
     List<Category> listC = dao.getAllCategory();
     List<Brand> listB = dao.getAllBrands();
@@ -19,6 +19,7 @@
     <title>Thêm Sản Phẩm Mới - Luma Store</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* CSS sếp giữ nguyên vì đang rất ổn áp */
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 260px; background-color: #ffffff; display: flex; flex-direction: column; box-shadow: 2px 0 15px rgba(0,0,0,0.04); z-index: 10; }
         .sidebar-header { padding: 25px 20px; font-size: 24px; font-weight: 900; color: #0056b3; border-bottom: 1px solid #f1f5f9; letter-spacing: 1px; text-align: center; }
@@ -29,7 +30,6 @@
         .sidebar-menu a.active { background-color: #eff6ff; color: #0056b3; border-left: 4px solid #0056b3; }
         .sidebar-footer { padding: 20px; border-top: 1px solid #f1f5f9; }
         .sidebar-footer a { color: #e63946; text-decoration: none; font-weight: bold; font-size: 15px; display: flex; align-items: center; transition: 0.3s; }
-        .sidebar-footer a i { margin-right: 10px; }
         .sidebar-footer a:hover { color: #dc2626; background-color: #fef2f2; padding-left: 10px; border-radius: 8px;}
         .content { flex: 1; padding: 30px 40px; overflow-y: auto; }
         .btn-back { color: #64748b; text-decoration: none; font-size: 14.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; transition: 0.2s; }
@@ -58,7 +58,7 @@
             <a href="adminDashboard"><i class="fas fa-chart-pie"></i> Tổng quan</a>
             <a href="manager" class="active"><i class="fas fa-box-open"></i> Quản lý Sản phẩm</a>
             <a href="managerOrder"><i class="fas fa-shopping-cart"></i> Quản lý Đơn hàng</a>
-            <a href="#"><i class="fas fa-users"></i> Quản lý Khách hàng</a>
+            <a href="managerUser"><i class="fas fa-users"></i> Quản lý Khách hàng</a>
         </div>
         <div class="sidebar-footer">
             <a href="logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
@@ -70,16 +70,23 @@
         <h2 class="page-title"><i class="fas fa-plus-circle" style="color: #0056b3;"></i> Thêm Sản Phẩm Mới</h2>
         
         <div class="form-container">
-            <form action="add" method="post" enctype="multipart/form-data">
+            <%-- ĐÃ BỎ enctype="multipart/form-data" --%>
+            <form action="add" method="post">
                 
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
                         <label>Tên giày</label>
                         <input type="text" name="name" placeholder="VD: Nike Air Force 1..." required>
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label>Ảnh sản phẩm (Upload từ máy tính)</label>
-                        <input type="file" name="image" accept="image/*" required style="padding: 9px 15px;">
+                    
+                    <div class="form-group" style="flex: 1.5;">
+                        <label>Tên file ảnh (Trong thư mục images)</label>
+                        <div style="display: flex; align-items: center;">
+                            <span style="background: #e2e8f0; padding: 12px; border-radius: 8px 0 0 8px; border: 1px solid #cbd5e1; border-right: none; font-size: 14px; color: #475569;">images/</span>
+                            <input type="text" name="image" placeholder="VD: giay1.jpg" required 
+                                   style="border-radius: 0 8px 8px 0; flex: 1;">
+                        </div>
+                        <small style="color: #64748b; margin-top: 5px;">Sếp nhớ ném ảnh vào <b>web/images</b> trước nhé!</small>
                     </div>
                 </div>
                 
