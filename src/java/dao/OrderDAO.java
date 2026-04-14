@@ -34,33 +34,23 @@ public class OrderDAO {
         return count;
     }
 
-    // --- 2. HỦY ĐƠN HÀNG ---
+    // --- 2. HỦY ĐƠN HÀNG & BÁO CHO ADMIN (ĐÃ SỬA CHUẨN) ---
     public void cancelOrder(String orderId) {
         String queryOrder = "UPDATE Orders SET Status = 'Đã hủy' WHERE OrderID = ?";
+        String queryNotiAdmin = "INSERT INTO Notifications (UserID, Message) VALUES (1, ?)";
         try {
             conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(queryOrder);
-            ps.setString(1, orderId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+            conn.setAutoCommit(false); // Dùng transaction để đảm bảo cả 2 lệnh đều chạy
 
-    // --- 3. XÁC NHẬN ĐÃ NHẬN HÀNG ---
-    public void confirmReceived(String orderId) {
-        String queryOrder = "UPDATE Orders SET Status = 'Hoàn thành' WHERE OrderID = ?";
-        String queryPayment = "UPDATE Payments SET PaymentStatus = 'Đã thanh toán' WHERE OrderID = ?";
-        try {
-            conn = new DBContext().getConnection();
-            conn.setAutoCommit(false);
+            // Cập nhật trạng thái đơn
             ps = conn.prepareStatement(queryOrder);
             ps.setString(1, orderId);
             ps.executeUpdate();
 
-            PreparedStatement psPayment = conn.prepareStatement(queryPayment);
-            psPayment.setString(1, orderId);
-            psPayment.executeUpdate();
+            // Bắn tin cho Admin Dashboard
+            PreparedStatement psAdmin = conn.prepareStatement(queryNotiAdmin);
+            psAdmin.setString(1, "HỆ THỐNG: Đơn hàng #LUMA" + orderId + " đã bị hủy!");
+            psAdmin.executeUpdate();
 
             conn.commit();
         } catch (Exception e) {
@@ -71,10 +61,39 @@ public class OrderDAO {
         }
     }
 
-    // --- 4. LẤY TOÀN BỘ THÔNG BÁO (Không giới hạn để nhảy số chuẩn trên chuông) ---
+    // --- 3. KHÁCH XÁC NHẬN NHẬN HÀNG -> BÁO CHO ADMIN ---
+    public void confirmReceived(String orderId) {
+        String queryOrder = "UPDATE Orders SET Status = 'Hoàn thành' WHERE OrderID = ?";
+        String queryPayment = "UPDATE Payments SET PaymentStatus = 'Đã thanh toán' WHERE OrderID = ?";
+        String queryNotiAdmin = "INSERT INTO Notifications (UserID, Message) VALUES (1, ?)";
+        try {
+            conn = new DBContext().getConnection();
+            conn.setAutoCommit(false);
+            
+            ps = conn.prepareStatement(queryOrder);
+            ps.setString(1, orderId);
+            ps.executeUpdate();
+
+            PreparedStatement psPayment = conn.prepareStatement(queryPayment);
+            psPayment.setString(1, orderId);
+            psPayment.executeUpdate();
+            
+            PreparedStatement psAdmin = conn.prepareStatement(queryNotiAdmin);
+            psAdmin.setString(1, "HỆ THỐNG: Đơn hàng #LUMA" + orderId + " khách đã xác nhận nhận hàng thành công!");
+            psAdmin.executeUpdate();
+
+            conn.commit();
+        } catch (Exception e) {
+            try { if (conn != null) conn.rollback(); } catch (Exception ex) {}
+            e.printStackTrace();
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ex) {}
+        }
+    }
+
+    // --- 4. LẤY TOÀN BỘ THÔNG BÁO CHO CHUÔNG CỦA KHÁCH ---
     public List<String> getNotisByUserID(int userId) {
         List<String> list = new ArrayList<>();
-        // Đã xóa LIMIT 5 để đồng bộ 100% với số lượng trong Database
         String query = "SELECT Message FROM Notifications WHERE UserID = ? ORDER BY CreatedAt DESC";
         try {
             conn = new DBContext().getConnection();
@@ -111,20 +130,7 @@ public class OrderDAO {
         return list;
     }
 
-    // --- 6. ĐÁNH DẤU ĐÃ ĐỌC ---
-    public void markNotiAsRead(int notiId) {
-        String query = "UPDATE Notifications SET IsRead = 1 WHERE NotiID = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setInt(1, notiId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // --- 7. CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG VÀ TỰ ĐỘNG TẠO THÔNG BÁO ---
+    // --- 6. ADMIN DUYỆT ĐƠN -> BÁO CHO CẢ 2 BÊN ---
     public void updateOrderStatus(String orderId, String status) {
         String queryUpdate = "UPDATE Orders SET Status = ? WHERE OrderID = ?";
         String queryGetUID = "SELECT UserID FROM Orders WHERE OrderID = ?";
@@ -143,11 +149,16 @@ public class OrderDAO {
             ResultSet rsUID = psGet.executeQuery();
             if (rsUID.next()) {
                 int uID = rsUID.getInt("UserID");
-                String msg = "Đơn hàng #LUMA" + orderId + " đã chuyển sang: " + status;
-                PreparedStatement psNoti = conn.prepareStatement(queryNoti);
-                psNoti.setInt(1, uID);
-                psNoti.setString(2, msg);
-                psNoti.executeUpdate();
+                
+                PreparedStatement psNotiK = conn.prepareStatement(queryNoti);
+                psNotiK.setInt(1, uID);
+                psNotiK.setString(2, "Đơn hàng #LUMA" + orderId + " đã chuyển sang: " + status);
+                psNotiK.executeUpdate();
+
+                PreparedStatement psNotiA = conn.prepareStatement(queryNoti);
+                psNotiA.setInt(1, 1); 
+                psNotiA.setString(2, "HỆ THỐNG: Đơn hàng #LUMA" + orderId + " đã được cập nhật trạng thái: " + status);
+                psNotiA.executeUpdate();
             }
             conn.commit();
         } catch (Exception e) {
@@ -158,35 +169,22 @@ public class OrderDAO {
         }
     }
 
-    // --- 8. LẤY TẤT CẢ ĐƠN HÀNG (Cho Admin - Hiện toàn bộ trừ đơn rác của Admin) ---
+    // --- 7. LẤY TẤT CẢ ĐƠN HÀNG (Admin) ---
     public List<Order> getAllOrders() {
         List<Order> list = new ArrayList<>();
-        String query = "SELECT o.* FROM Orders o "
-                + "JOIN Users u ON o.UserID = u.UserID "
-                + "WHERE u.Role != 'Admin' "
-                + "ORDER BY o.OrderDate DESC";
+        String query = "SELECT o.* FROM Orders o JOIN Users u ON o.UserID = u.UserID WHERE u.Role != 'Admin' ORDER BY o.OrderDate DESC";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(new Order(
-                        rs.getInt("OrderID"),
-                        rs.getInt("UserID"),
-                        rs.getString("OrderDate"),
-                        rs.getDouble("TotalAmount"),
-                        rs.getString("ShippingPhone"),
-                        rs.getString("ShippingAddress"),
-                        rs.getString("Status")
-                ));
+                list.add(new Order(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7)));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
-    // --- 9. LẤY ĐƠN HÀNG THEO USER ID ---
+    // --- 8. LẤY ĐƠN HÀNG THEO USER ID ---
     public List<Order> getOrdersByUserID(int userId) {
         List<Order> list = new ArrayList<>();
         String query = "SELECT * FROM Orders WHERE UserID = ? ORDER BY OrderDate DESC";
@@ -199,13 +197,11 @@ public class OrderDAO {
                 list.add(new Order(rs.getInt(1), rs.getInt(2), rs.getString(3), 
                         rs.getDouble(4), rs.getString(5), rs.getString(6), rs.getString(7)));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
-    // --- 10. ĐẶT HÀNG ---
+    // --- 9. ĐẶT HÀNG & BÁO ADMIN ---
     public boolean placeOrder(int userId, double totalAmount, String phone, String address, String paymentMethod, List<CartItem> cartItems) {
         Connection conn2 = null;
         try {
@@ -214,56 +210,56 @@ public class OrderDAO {
 
             String sqlOrder = "INSERT INTO Orders (UserID, TotalAmount, ShippingPhone, ShippingAddress, Status) VALUES (?, ?, ?, ?, 'Chờ xác nhận')";
             PreparedStatement psOrder = conn2.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
-            psOrder.setInt(1, userId);
-            psOrder.setDouble(2, totalAmount);
-            psOrder.setString(3, phone);
-            psOrder.setString(4, address);
+            psOrder.setInt(1, userId); psOrder.setDouble(2, totalAmount); psOrder.setString(3, phone); psOrder.setString(4, address);
             psOrder.executeUpdate();
 
             ResultSet rsKey = psOrder.getGeneratedKeys();
             int orderId = 0;
             if (rsKey.next()) orderId = rsKey.getInt(1);
 
-            String sqlDetail = "INSERT INTO OrderDetails (OrderID, VariantID, Quantity, UnitPrice) VALUES (?, ?, ?, ?)";
-            PreparedStatement psDetail = conn2.prepareStatement(sqlDetail);
-
-            String sqlUpdateStock = "UPDATE ShoeVariants SET StockQuantity = StockQuantity - ? WHERE VariantID = ?";
-            PreparedStatement psStock = conn2.prepareStatement(sqlUpdateStock);
-
+            String sqlD = "INSERT INTO OrderDetails (OrderID, VariantID, Quantity, UnitPrice) VALUES (?, ?, ?, ?)";
+            PreparedStatement psD = conn2.prepareStatement(sqlD);
+            String sqlS = "UPDATE ShoeVariants SET StockQuantity = StockQuantity - ? WHERE VariantID = ?";
+            PreparedStatement psS = conn2.prepareStatement(sqlS);
             for (CartItem item : cartItems) {
-                psDetail.setInt(1, orderId);
-                psDetail.setInt(2, item.getVariantId());
-                psDetail.setInt(3, item.getQuantity());
-                psDetail.setDouble(4, item.getPrice());
-                psDetail.executeUpdate();
-
-                psStock.setInt(1, item.getQuantity());
-                psStock.setInt(2, item.getVariantId());
-                psStock.executeUpdate();
+                psD.setInt(1, orderId); psD.setInt(2, item.getVariantId()); psD.setInt(3, item.getQuantity()); psD.setDouble(4, item.getPrice());
+                psD.executeUpdate();
+                psS.setInt(1, item.getQuantity()); psS.setInt(2, item.getVariantId());
+                psS.executeUpdate();
             }
 
-            String sqlPayment = "INSERT INTO Payments (OrderID, PaymentMethod, Amount, PaymentStatus) VALUES (?, ?, ?, 'Chưa thanh toán')";
-            PreparedStatement psPayment = conn2.prepareStatement(sqlPayment);
-            psPayment.setInt(1, orderId);
-            psPayment.setString(2, paymentMethod);
-            psPayment.setDouble(3, totalAmount);
-            psPayment.executeUpdate();
+            String sqlP = "INSERT INTO Payments (OrderID, PaymentMethod, Amount, PaymentStatus) VALUES (?, ?, ?, 'Chưa thanh toán')";
+            PreparedStatement psP = conn2.prepareStatement(sqlP);
+            psP.setInt(1, orderId); psP.setString(2, paymentMethod); psP.setDouble(3, totalAmount);
+            psP.executeUpdate();
 
-            String sqlClearCart = "DELETE FROM Cart WHERE CartID = ?";
-            PreparedStatement psClear = conn2.prepareStatement(sqlClearCart);
-            for (CartItem item : cartItems) {
-                psClear.setInt(1, item.getCartId());
-                psClear.executeUpdate();
-            }
+            String sqlAdminNoti = "INSERT INTO Notifications (UserID, Message) VALUES (1, ?)";
+            PreparedStatement psA = conn2.prepareStatement(sqlAdminNoti);
+            psA.setString(1, "KHÁCH HÀNG: Có đơn hàng mới #LUMA" + orderId + " đang chờ duyệt!");
+            psA.executeUpdate();
 
             conn2.commit();
             return true;
         } catch (Exception e) {
             try { if (conn2 != null) conn2.rollback(); } catch (Exception ex) {}
-            e.printStackTrace();
             return false;
         } finally {
             try { if (conn2 != null) conn2.setAutoCommit(true); } catch (Exception ex) {}
         }
+    }
+
+    // --- 10. LẤY TIN CHO ADMIN DASHBOARD ---
+    public List<String> getAdminSystemNotifications() {
+        List<String> list = new ArrayList<>();
+        String query = "SELECT Message FROM Notifications WHERE UserID = 1 ORDER BY CreatedAt DESC LIMIT 15";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getString("Message"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
     }
 }
