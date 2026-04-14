@@ -125,9 +125,21 @@ public class CheckoutControl extends HttpServlet {
             boolean success = orderDao.placeOrder(u.getUserID(), totalMoney, phone, address, paymentMethod, listC);
             
             if (success) {
-                // Đặt xong thì xóa cái danh sách tạm đi
+                // 1. Đặt xong thì xóa cái danh sách tạm đi
                 session.removeAttribute("checkoutItems"); 
                 
+                // =========================================================
+                // 2. FIX: CẬP NHẬT LẠI SỐ LƯỢNG GIỎ HÀNG TRÊN HEADER
+                // =========================================================
+                CartDAO refreshCartDao = new CartDAO();
+                // Chạy vào DB đếm lại xem giỏ của ông này còn bao nhiêu món chưa mua
+                List<CartItem> remainingCart = refreshCartDao.getCartByUserID(u.getUserID());
+                
+                // Cập nhật lại cái biến cartSize (dùng ở header.jsp)
+                session.setAttribute("cartSize", remainingCart.size());
+                // =========================================================
+                
+                // 3. Chuyển hướng sang trang thành công
                 request.setAttribute("msg", "Đơn hàng của bạn đã được tiếp nhận!");
                 request.getRequestDispatcher("order_success.jsp").forward(request, response);
             } else {

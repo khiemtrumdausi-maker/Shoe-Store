@@ -15,7 +15,7 @@ public class OrderDAO {
     PreparedStatement ps = null;
     ResultSet rs = null;
 
-    // --- PHẦN MỚI: LẤY THÔNG BÁO CHO USER ---
+    // --- LẤY THÔNG BÁO CHO USER ---
     public List<String> getNotisByUserID(int userId) {
         List<String> list = new ArrayList<>();
         String query = "SELECT Message FROM Notifications WHERE UserID = ? ORDER BY CreatedAt DESC LIMIT 5";
@@ -33,7 +33,7 @@ public class OrderDAO {
         return list;
     }
 
-    // --- CẬP NHẬT: ADMIN DUYỆT ĐƠN + TỰ ĐẺ THÔNG BÁO ---
+    // --- ADMIN DUYỆT ĐƠN + TỰ ĐẺ THÔNG BÁO ---
     public void updateOrderStatus(String orderId, String status) {
         String queryUpdate = "UPDATE Orders SET Status = ? WHERE OrderID = ?";
         String queryGetUID = "SELECT UserID FROM Orders WHERE OrderID = ?";
@@ -41,15 +41,15 @@ public class OrderDAO {
         
         try {
             conn = new DBContext().getConnection();
-            conn.setAutoCommit(false); // Đảm bảo tính toàn vẹn
+            conn.setAutoCommit(false); 
 
-            // 1. Cập nhật Status đơn hàng
+            // 1. Cập nhật Status
             ps = conn.prepareStatement(queryUpdate);
             ps.setString(1, status);
             ps.setString(2, orderId);
             ps.executeUpdate();
 
-            // 2. Tìm xem đơn này của User nào để gửi thông báo
+            // 2. Tìm User
             PreparedStatement psGet = conn.prepareStatement(queryGetUID);
             psGet.setString(1, orderId);
             ResultSet rsUID = psGet.executeQuery();
@@ -58,13 +58,12 @@ public class OrderDAO {
                 int uID = rsUID.getInt("UserID");
                 String msg = "Đơn hàng #LUMA" + orderId + " đã chuyển sang: " + status;
                 
-                // 3. Chèn vào bảng Notifications
+                // 3. Chèn Noti
                 PreparedStatement psNoti = conn.prepareStatement(queryNoti);
                 psNoti.setInt(1, uID);
                 psNoti.setString(2, msg);
                 psNoti.executeUpdate();
             }
-
             conn.commit();
         } catch (Exception e) {
             try { conn.rollback(); } catch (Exception ex) {}
@@ -74,7 +73,6 @@ public class OrderDAO {
         }
     }
 
-    // --- CÁC HÀM CŨ GIỮ NGUYÊN ---
     public List<Order> getAllOrders() {
         List<Order> list = new ArrayList<>();
         String query = "SELECT * FROM Orders ORDER BY OrderDate DESC";
@@ -109,6 +107,8 @@ public class OrderDAO {
         try {
             conn2 = new DBContext().getConnection();
             conn2.setAutoCommit(false);
+            
+            // 1. Tạo Order
             String sqlOrder = "INSERT INTO Orders (UserID, TotalAmount, ShippingPhone, ShippingAddress, Status) VALUES (?, ?, ?, ?, 'Chờ xác nhận')";
             PreparedStatement psOrder = conn2.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
             psOrder.setInt(1, userId);
@@ -116,28 +116,41 @@ public class OrderDAO {
             psOrder.setString(3, phone);
             psOrder.setString(4, address);
             psOrder.executeUpdate();
+            
             ResultSet rsKey = psOrder.getGeneratedKeys();
             int orderId = 0;
             if (rsKey.next()) orderId = rsKey.getInt(1);
 
+            // 2. Thêm Chi tiết đơn hàng & Trừ kho
             String sqlDetail = "INSERT INTO OrderDetails (OrderID, VariantID, Quantity, UnitPrice) VALUES (?, ?, ?, ?)";
             PreparedStatement psDetail = conn2.prepareStatement(sqlDetail);
             String sqlUpdateStock = "UPDATE ShoeVariants SET StockQuantity = StockQuantity - ? WHERE VariantID = ?";
             PreparedStatement psStock = conn2.prepareStatement(sqlUpdateStock);
+            
             for (CartItem item : cartItems) {
                 psDetail.setInt(1, orderId); psDetail.setInt(2, item.getVariantId()); psDetail.setInt(3, item.getQuantity()); psDetail.setDouble(4, item.getPrice());
                 psDetail.executeUpdate();
                 psStock.setInt(1, item.getQuantity()); psStock.setInt(2, item.getVariantId());
                 psStock.executeUpdate();
             }
+            
+            // 3. Thêm Payment
             String sqlPayment = "INSERT INTO Payments (OrderID, PaymentMethod, Amount, PaymentStatus) VALUES (?, ?, ?, 'Chưa thanh toán')";
             PreparedStatement psPayment = conn2.prepareStatement(sqlPayment);
             psPayment.setInt(1, orderId); psPayment.setString(2, paymentMethod); psPayment.setDouble(3, totalAmount);
             psPayment.executeUpdate();
-            String sqlClearCart = "DELETE FROM Cart WHERE UserID = ?";
+            
+            // =========================================================
+            // 4. FIX LỖI: CHỈ XÓA NHỮNG MÓN ĐÃ MUA (Dựa theo CartID)
+            // =========================================================
+            String sqlClearCart = "DELETE FROM Cart WHERE CartID = ?";
             PreparedStatement psClear = conn2.prepareStatement(sqlClearCart);
-            psClear.setInt(1, userId);
-            psClear.executeUpdate();
+            for (CartItem item : cartItems) {
+                psClear.setInt(1, item.getCartId());
+                psClear.executeUpdate();
+            }
+            // =========================================================
+
             conn2.commit();
             return true;
         } catch (Exception e) {
