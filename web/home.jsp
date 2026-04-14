@@ -15,9 +15,12 @@
         a { text-decoration: none; color: inherit; }
         
         /* --- SLIDER CSS --- */
+        /* QUAY LẠI KÍCH THƯỚC CŨ: 500px */
         .slider-container { width: 100%; height: 500px; overflow: hidden; position: relative; background: #000; }
         .slider-wrapper { width: 200%; height: 100%; display: flex; animation: slideAuto 10s infinite; }
         .slide { width: 50%; height: 100%; position: relative; }
+        
+        /* QUAY LẠI STYLE CŨ: cover để ảnh phủ kín khung 500px */
         .slide img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
         
         @keyframes slideAuto {
@@ -49,7 +52,6 @@
         .product-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; transition: all 0.3s ease; border: 1px solid #f0f0f0; display: flex; flex-direction: column; justify-content: space-between;}
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #0056b3; }
         
-        /* CSS Ảnh cho trang chủ (Chống lệch khung) */
         .product-card img { 
             width: 100%; 
             height: 230px; 
@@ -75,7 +77,7 @@
     <div class="slider-container">
         <div class="slider-wrapper">
             <div class="slide">
-                <img src="${pageContext.request.contextPath}/images/banner.jpg" alt="Summer Sale">
+                <img src="${pageContext.request.contextPath}/images/sx.jpg" alt="New Arrival">
                 <div class="slide-content">
                     <h2>New Arrival</h2>
                     <p>Khám phá bộ sưu tập giày thể thao mới nhất. Phong cách năng động, trải nghiệm êm ái.</p>
@@ -83,7 +85,7 @@
                 </div>
             </div>
             <div class="slide">
-                <img src="${pageContext.request.contextPath}/images/banner_moi_2.jpg" alt="Banner 2">
+                <img src="${pageContext.request.contextPath}/images/poster-giay-just-do-it.jpg" alt="Summer Sale">
                 <div class="slide-content">
                     <h2>Summer Sale</h2>
                     <p>Ưu đãi cực sốc lên tới 50% cho các dòng giày chạy bộ hot nhất. Đừng bỏ lỡ!</p>
@@ -109,8 +111,6 @@
                     <p>Bảo mật thông tin 100%</p>
                 </div>
             </div>
-            
-            <%-- SỬA Ở ĐÂY: Đổi Hoàn trả thành Cam Kết Chính Hãng --%>
             <div class="service-item">
                 <i class="fas fa-award service-icon"></i>
                 <div class="service-text">
@@ -130,7 +130,6 @@
                         <img src="${pageContext.request.contextPath}/images/${o.image.replace('images/', '')}" 
                              alt="${o.name}" 
                              onerror="this.onerror=null; this.src='https://placehold.co/300x300/f1f5f9/94a3b8?text=Luma+Store'">
-                        
                         <div class="product-title" title="${o.name}">${o.name}</div>
                     </div>
                     <div>
@@ -153,6 +152,5 @@
     </main>
 
     <%@ include file="footer.jsp" %>
-
 </body>
 </html>
