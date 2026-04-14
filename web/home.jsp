@@ -109,11 +109,13 @@
                     <p>Bảo mật thông tin 100%</p>
                 </div>
             </div>
+            
+            <%-- SỬA Ở ĐÂY: Đổi Hoàn trả thành Cam Kết Chính Hãng --%>
             <div class="service-item">
-                <i class="fas fa-sync-alt service-icon"></i>
+                <i class="fas fa-award service-icon"></i>
                 <div class="service-text">
-                    <h4>Đổi trả dễ dàng</h4>
-                    <p>Trong vòng 7 ngày làm việc</p>
+                    <h4>Cam Kết Chính Hãng</h4>
+                    <p>Chuẩn Authentic 100%</p>
                 </div>
             </div>
         </div>
